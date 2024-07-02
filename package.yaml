@@ -1,0 +1,54 @@
+name:                zsh-toolbox
+version:             0.1.0.0
+github:              "mngrm3a/zsh-toolbox"
+license:             BSD-3-Clause
+author:              "mngrm3a"
+maintainer:          "9266859+mngrm3a@users.noreply.github.com"
+copyright:           "2024 mngrm3a"
+
+extra-source-files:
+- README.md
+
+description:         Please see the README on GitHub at <https://github.com/mngrm3a/zsh-toolbox#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+
+library:
+  source-dirs: src
+
+executables:
+  zsh-toolbox-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - zsh-toolbox
+
+tests:
+  zsh-toolbox-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    build-tools:
+    - hspec-discover
+    dependencies:
+    - zsh-toolbox
+    - hspec

@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:zsh-toolbox"
+
+    - path: "app/Main.hs"
+      component: "zsh-toolbox:exe:zsh-toolbox-exe"
+
+    - path: "test"
+      component: "zsh-toolbox:test:zsh-toolbox-test"
