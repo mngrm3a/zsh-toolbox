@@ -1,40 +1,38 @@
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-  };
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   outputs =
+    { self, nixpkgs, ... }:
+    let
+      supportedSystems = [
+        "aarch64-darwin"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
+      forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
+      hsPkgsFor = forAllSystems (system: (import nixpkgs { inherit system; }).haskellPackages);
+    in
     {
-      self,
-      nixpkgs,
-      flake-utils,
-      ...
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-        hsPkgs = pkgs.haskell.packages."ghc965";
-        hsTools = with hsPkgs; [
-          ghc
-          ghcid
-          haskell-language-server
-          hpack
-          cabal-install
-          stack
-          cabal2nix
-        ];
-      in
-      {
-        packages.default = hsPkgs.callPackage ./package.nix { };
-        formatter = pkgs.nixpkgs-fmt;
-        devShells.default = pkgs.mkShell {
-          buildInputs = [
-            pkgs.nil
-            pkgs.zlib
-          ] ++ hsTools;
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath hsTools;
-        };
-      }
-    );
+      overlays.default = final: prev: { zsh-toolbox = final.haskellPackages.callCabal2nix ./. { }; };
+      packages = forAllSystems (system: {
+        default = hsPkgsFor.${system}.callCabal2nix "zsh-toolbox" ./. { };
+      });
+      devShells = forAllSystems (system: {
+        default =
+          let
+            hsPkgs = hsPkgsFor.${system};
+          in
+          with hsPkgs;
+          shellFor {
+            packages = p: [ self.packages.${system}.default ];
+            withHoogle = true;
+            buildInputs = [
+              haskell-language-server
+              ghcid
+              hpack
+              cabal-install
+              stack
+            ];
+          };
+      });
+    };
 }
