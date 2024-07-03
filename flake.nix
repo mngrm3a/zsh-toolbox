@@ -22,9 +22,11 @@
           hpack
           cabal-install
           stack
+          cabal2nix
         ];
       in
       {
+        packages.default = hsPkgs.callPackage ./package.nix { };
         formatter = pkgs.nixpkgs-fmt;
         devShells.default = pkgs.mkShell {
           buildInputs = [
