@@ -13,6 +13,10 @@ description:         Please see the README on GitHub at <https://github.com/mngr
 
 dependencies:
 - base >= 4.7 && < 5
+- filepath
+- directory
+- process
+- unix
 
 ghc-options:
 - -Wall
