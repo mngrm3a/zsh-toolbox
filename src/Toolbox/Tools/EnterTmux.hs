@@ -5,11 +5,12 @@ module Toolbox.Tools.EnterTmux (tool) where
 import Data.Char (isAlphaNum, isLetter)
 import Data.Function ((&))
 import qualified Data.List as L
+import GHC.IO.Exception (ExitCode (..))
 import System.Directory (getCurrentDirectory)
 import System.Environment (getArgs)
 import System.FilePath (dropExtension, takeBaseName)
 import System.Posix (executeFile)
-import System.Process (readProcess)
+import System.Process (readProcessWithExitCode)
 import Text.Printf (printf)
 import Toolbox.Helpers (exitFailureWithMessage, usageError)
 import Toolbox.Tool (Tool (..))
@@ -32,22 +33,34 @@ main =
     _invalidArgs -> usageError "[<SESSION>|<PATH>]"
 
 tryAttachOrNew :: String -> IO a
-tryAttachOrNew name' =
-  case deriveSessionName name' of
-    Nothing -> exitFailureWithMessage $ printf "can't derive session name from '%s'" name'
-    Just name -> do
-      sessions <- listSessions
-      if name `elem` sessions
-        then executeFile "tmux" True ["attach", "-t", name] Nothing
-        else executeFile "tmux" True ["new", "-s", name] Nothing
-
-listSessions :: IO [String]
-listSessions = do
-  output <- readProcess "tmux" ["list-sessions"] mempty
-  L.lines output
-    & map (L.takeWhile (/= ':'))
-    & filter (not . null)
-    & pure
+tryAttachOrNew nameOrPath = do
+  sessionName <- case deriveSessionName nameOrPath of
+    Just sessionName -> pure sessionName
+    Nothing ->
+      exitFailureWithMessage $
+        printf "can't derive session name from '%s" nameOrPath
+  (exitCode, stdOut, stdErr) <-
+    readProcessWithExitCode
+      "tmux"
+      ["list-sessions"]
+      mempty
+  case exitCode of
+    ExitFailure _ ->
+      if isNoServerError stdErr
+        then newSession sessionName
+        else exitFailureWithMessage $ printf "tmux: %s" stdErr
+    ExitSuccess -> do
+      let sessions =
+            L.lines stdOut
+              & map (L.takeWhile (/= ':'))
+              & filter (not . null)
+      if sessionName `elem` sessions
+        then attachSession sessionName
+        else newSession sessionName
+  where
+    isNoServerError stdErr = "no server running on" `L.isPrefixOf` stdErr
+    attachSession name = executeFile "tmux" True ["attach", "-t", name] Nothing
+    newSession name = executeFile "tmux" True ["new", "-s", name] Nothing
 
 deriveSessionName :: String -> Maybe String
 deriveSessionName "/" = Just "root"
