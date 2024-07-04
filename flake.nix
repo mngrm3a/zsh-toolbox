@@ -9,6 +9,7 @@
         "x86_64-linux"
       ];
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
+      pkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
       hsPkgsFor = forAllSystems (system: (import nixpkgs { inherit system; }).haskellPackages);
       mkPackage = hsPkgs: hsPkgs.callCabal2nix "zsh-toolbox" ./. { };
     in
@@ -20,7 +21,9 @@
       devShells = forAllSystems (system: {
         default =
           let
+            pkgs = pkgsFor.${system};
             hsPkgs = hsPkgsFor.${system};
+            mkLink = pkgs.writeShellScriptBin "mk-link" "ln -s $(cabal list-bin zsh-toolbox-exe) $1";
           in
           with hsPkgs;
           shellFor {
@@ -32,6 +35,7 @@
               hpack
               cabal-install
               stack
+              mkLink
             ];
           };
       });
