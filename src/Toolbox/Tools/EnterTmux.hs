@@ -46,7 +46,7 @@ tryAttachOrNew nameOrPath = do
       mempty
   case exitCode of
     ExitFailure _ ->
-      if isNoServerError stdErr
+      if isNoSocktError stdErr || isNoServerError stdErr
         then newSession sessionName
         else exitFailureWithMessage $ printf "tmux: %s" stdErr
     ExitSuccess -> do
@@ -58,6 +58,7 @@ tryAttachOrNew nameOrPath = do
         then attachSession sessionName
         else newSession sessionName
   where
+    isNoSocktError stdErr = "error connecting to" `L.isPrefixOf` stdErr
     isNoServerError stdErr = "no server running on" `L.isPrefixOf` stdErr
     attachSession name = executeFile "tmux" True ["attach", "-t", name] Nothing
     newSession name = executeFile "tmux" True ["new", "-s", name] Nothing
