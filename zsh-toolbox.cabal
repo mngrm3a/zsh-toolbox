@@ -27,7 +27,8 @@ library
       Toolbox
       Toolbox.Helpers
       Toolbox.Tool
-      Toolbox.Tools.Tx
+      Toolbox.Tools.EnterTmux
+      Toolbox.Tools.ListPath
   other-modules:
       Paths_zsh_toolbox
   autogen-modules:

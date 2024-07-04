@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Toolbox.Tools.Tx (tx) where
+module Toolbox.Tools.EnterTmux (tool) where
 
 import Data.Char (isAlphaNum, isLetter)
 import Data.Function ((&))
@@ -11,11 +11,11 @@ import System.FilePath (dropExtension, takeBaseName)
 import System.Posix (executeFile)
 import System.Process (readProcess)
 import Text.Printf (printf)
-import Toolbox.Helpers (exitFailureWithMessage)
+import Toolbox.Helpers (exitFailureWithMessage, usageError)
 import Toolbox.Tool (Tool (..))
 
-tx :: Tool
-tx =
+tool :: Tool
+tool =
   Tool
     { toolMain = main,
       toolCompletion =
@@ -29,7 +29,7 @@ main =
     [] -> getCurrentDirectory >>= tryAttachOrNew
     ["."] -> getCurrentDirectory >>= tryAttachOrNew
     [name] -> tryAttachOrNew name
-    _invalidArgs -> exitFailureWithMessage "Usage: tx [<SESSION>|<PATH>]"
+    _invalidArgs -> usageError "[<SESSION>|<PATH>]"
 
 tryAttachOrNew :: String -> IO a
 tryAttachOrNew name' =
