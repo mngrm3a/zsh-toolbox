@@ -10,11 +10,12 @@
       ];
       forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
       hsPkgsFor = forAllSystems (system: (import nixpkgs { inherit system; }).haskellPackages);
+      mkPackage = hsPkgs: hsPkgs.callCabal2nix "zsh-toolbox" ./. { };
     in
     {
-      overlays.default = final: prev: { zsh-toolbox = final.haskellPackages.callCabal2nix ./. { }; };
+      overlays.default = final: prev: { zsh-toolbox = mkPackage final.haskellPackages; };
       packages = forAllSystems (system: {
-        default = hsPkgsFor.${system}.callCabal2nix "zsh-toolbox" ./. { };
+        default = mkPackage hsPkgsFor.${system};
       });
       devShells = forAllSystems (system: {
         default =
