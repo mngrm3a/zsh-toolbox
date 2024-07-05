@@ -2,15 +2,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Toolbox.Tools.EnterTmux (tool) where
+module Toolbox.EnterTmux (main, completion) where
 
 import Data.Char (isAlpha, isAlphaNum, isPunctuation)
 import Data.Maybe (mapMaybe)
 import qualified Data.Text as T
 import System.Posix (executeFile)
-import Toolbox.Tool (Tool (..))
+import Toolbox.Helpers (usage)
 import Turtle
-  ( ExitCode (ExitFailure, ExitSuccess),
+  ( ExitCode (..),
+    Line,
     MonadIO,
     Text,
     arguments,
@@ -24,21 +25,18 @@ import Turtle
     (%),
   )
 
-tool :: Tool
-tool =
-  Tool
-    { toolMain = main,
-      toolCompletion =
-        "_tx() { words[1]=(tmux attach-session -t); (( CURRENT+=2 )); service=tmux; _tmux }\n\
-        \compdef _tx tx\n"
-    }
+completion :: [Line]
+completion =
+  [ "_tx() { words[1]=(tmux attach-session -t); (( CURRENT+=2 )); service=tmux; _tmux }",
+    "compdef _tx tx"
+  ]
 
 main :: IO ()
 main =
   arguments >>= \case
     [] -> pwd >>= attachOrNewSession . T.pack . basename
     [name] -> attachOrNewSession name
-    _invalidArgs -> die "Usage: [<SESSION>|<PATH>]"
+    _invalidArgs -> usage "[SESSION|PATH]"
 
 attachOrNewSession :: Text -> IO ()
 attachOrNewSession name = withSessionName name $ \sessionName -> do

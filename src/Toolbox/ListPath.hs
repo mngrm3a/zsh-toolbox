@@ -1,28 +1,24 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Toolbox.Tools.ListPath (tool) where
+module Toolbox.ListPath (main, completion) where
 
 import Control.Exception (onException)
 import qualified Data.Text as T
 import System.Environment (getArgs)
 import System.Posix (executeFile)
-import Toolbox.Tool (Tool (..))
-import Turtle (die, format, isRegularFile, pwd, s, stat, (%))
+import Toolbox.Helpers (usage)
+import Turtle (Line, die, format, isRegularFile, pwd, s, stat, (%))
 
-tool :: Tool
-tool =
-  Tool
-    { toolMain = main,
-      toolCompletion = mempty
-    }
+completion :: [Line]
+completion = mempty
 
 main :: IO ()
 main =
   getArgs >>= \case
     [] -> pwd >>= listPath
     [path] -> listPath path
-    _invalidArgs -> die "Usage: [PATH]"
+    _invalidArgs -> usage "[PATH]"
 
 listPath :: FilePath -> IO ()
 listPath path = do
