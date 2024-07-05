@@ -1,21 +1,26 @@
-module Toolbox (getTool, toolboxTools, toolboxCompletions) where
+{-# LANGUAGE OverloadedStrings #-}
 
-import qualified Data.List as L
-import Toolbox.Tool (Tool (toolCompletion, toolMain))
-import qualified Toolbox.Tools.EnterTmux (tool)
-import qualified Toolbox.Tools.ListPath (tool)
+module Toolbox (pickTool, tools, completions) where
 
-getTool :: String -> Maybe (IO ())
-getTool = fmap toolMain . flip L.lookup toolbox
+import qualified Data.List as L (lookup)
+import Data.Text (Text)
+import qualified Toolbox.EnterTmux as EnterTmux (completion, main)
+import qualified Toolbox.ListPath as ListPath (completion, main)
+import Turtle (Line, textToLine)
 
-toolboxTools :: [String]
-toolboxTools = map fst toolbox
+pickTool :: Text -> Maybe (IO ())
+pickTool name = textToLine name >>= fmap fst . flip L.lookup toolbox
 
-toolboxCompletions :: String
-toolboxCompletions = foldMap (toolCompletion . snd) toolbox
+tools :: [Line]
+tools = map fst toolbox
 
-toolbox :: [(String, Tool)]
+completions :: [Line]
+completions = foldMap (snd . snd) toolbox
+
+type Tool = (IO (), [Line])
+
+toolbox :: [(Line, Tool)]
 toolbox =
-  [ ("tx", Toolbox.Tools.EnterTmux.tool),
-    ("l", Toolbox.Tools.ListPath.tool)
+  [ ("tx", (EnterTmux.main, EnterTmux.completion)),
+    ("l", (ListPath.main, ListPath.completion))
   ]

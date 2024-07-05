@@ -1,15 +1,12 @@
-module Toolbox.Helpers (exitFailureWithMessage, usageError) where
+{-# LANGUAGE OverloadedStrings #-}
 
+module Toolbox.Helpers (usage) where
+
+import qualified Data.Text as T
 import System.Environment (getProgName)
-import System.Exit (exitFailure)
-import System.IO (hPutStrLn, stderr)
-import Text.Printf (PrintfArg, printf)
+import Turtle (Text, die, format, s, (%), (<$>))
 
-exitFailureWithMessage :: String -> IO a
-exitFailureWithMessage message =
-  hPutStrLn stderr message >> exitFailure
-
-usageError :: (PrintfArg a) => a -> IO ()
-usageError args = do
-  prog <- getProgName
-  exitFailureWithMessage $ printf "Usage: %s %s" prog args
+usage :: Turtle.Text -> IO b
+usage args = do
+  prog <- T.pack Turtle.<$> getProgName
+  die $ format ("Usage: " % s % " " % s) prog args

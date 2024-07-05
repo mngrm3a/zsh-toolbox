@@ -1,32 +1,30 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Main (main) where
 
+import qualified Data.Text as T
 import System.Environment (getArgs, getProgName)
-import System.Posix (getSymbolicLinkStatus, readSymbolicLink)
-import System.Posix.Files (isSymbolicLink)
-import Text.Printf (printf)
-import Toolbox (getTool, toolboxCompletions, toolboxTools)
-import Toolbox.Helpers (exitFailureWithMessage)
+import Toolbox (completions, pickTool, tools)
+import Turtle (echo, eprintf, isSymbolicLink, lstat, printf, readlink, s, (%))
 
 main :: IO ()
 main =
   getArgs >>= \case
-    ["--toolbox-tools"] -> mapM_ putStrLn toolboxTools
-    ["--toolbox-completions"] -> putStrLn toolboxCompletions
+    ["--toolbox-tools"] -> mapM_ echo tools
+    ["--toolbox-completions"] -> mapM_ echo completions
     ["--toolbox-trace-link", path] -> traceLink path
-    _toolArgs -> do
-      toolName <- getProgName
-      case getTool toolName of
-        Just runTool -> runTool
-        Nothing -> exitFailureWithMessage $ printf "unknown tool '%s'" toolName
+    _args -> do
+      name <- T.pack <$> getProgName
+      case pickTool name of
+        Just toolMain -> toolMain
+        Nothing -> eprintf ("unknown tool '" % s % "'") name
 
 traceLink :: FilePath -> IO ()
 traceLink path = do
-  fileStatus <- getSymbolicLinkStatus path
-  if isSymbolicLink fileStatus
-    then do
-      putStrLn $ printf "link: %s" path
-      target <- readSymbolicLink path
-      traceLink target
-    else putStrLn $ printf "root: %s" path
+  status <- lstat path
+  if isSymbolicLink status
+    then trace "link" path >> readlink path >>= traceLink
+    else trace "root" path
+  where
+    trace n = printf (s % ": " % s) n . T.pack

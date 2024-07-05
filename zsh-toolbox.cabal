@@ -25,10 +25,9 @@ source-repository head
 library
   exposed-modules:
       Toolbox
+      Toolbox.EnterTmux
       Toolbox.Helpers
-      Toolbox.Tool
-      Toolbox.Tools.EnterTmux
-      Toolbox.Tools.ListPath
+      Toolbox.ListPath
   other-modules:
       Paths_zsh_toolbox
   autogen-modules:
